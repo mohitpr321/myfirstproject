@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: mohitpr461/mohit-nginx-image1:20 
+        image: mohitpr461/mohit-nginx-image1:98 
         ports:
         - containerPort: 80  # Nginx listens on port 80
 ---
