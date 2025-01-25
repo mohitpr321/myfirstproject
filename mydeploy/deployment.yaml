@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:latest  # You can change to a specific version, if needed
+        image: mohitpr461/mohit-nginx-image1:7 
         ports:
         - containerPort: 80  # Nginx listens on port 80
 ---
