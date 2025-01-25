@@ -1,1 +1,24 @@
-This is my new file
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3  # Number of Nginx pods to run
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest  # You can change to a specific version, if needed
+        ports:
+        - containerPort: 80  # Nginx listens on port 80
+---
+
+
