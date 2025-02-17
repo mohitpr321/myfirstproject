@@ -11,7 +11,7 @@ pipeline {
     REGISTRY_CREDENTIALS = credentials('docker-cred')
     GIT_REPO_NAME = "myfirstproject"
     GIT_USER_NAME = "mohitpr321"
-    SONARQUBE_URL = "http://192.168.1.120:9000
+    SONARQUBE_URL = "http://192.168.1.120:9000"
   }
 
   stages {
