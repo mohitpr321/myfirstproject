@@ -5,20 +5,42 @@ pipeline {
       args '--user root -v /var/run/docker.sock:/var/run/docker.sock' // mount Docker socket to access the host's Docker daemon
     }
   }
+
+  environment {
+    DOCKER_IMAGE = "mohitpr461/mohit-nginx-image1:${BUILD_NUMBER}"
+    REGISTRY_CREDENTIALS = credentials('docker-cred')
+    GIT_REPO_NAME = "myfirstproject"
+    GIT_USER_NAME = "mohitpr321"
+    SONARQUBE_URL = "http://192.168.1.120:9000
+  }
+
   stages {
+    
     stage('Checkout') {
       steps {
         sh 'echo passed'
         //git branch: 'main', url: 'https://github.com/mohitpr321/myfirstproject.git'
       }
-       
     }
-    stage('Build and Push Docker Image') {
+
+    stage('SonarQube Analysis') {
       environment {
-        DOCKER_IMAGE = "mohitpr461/mohit-nginx-image1:${BUILD_NUMBER}"
-        // DOCKERFILE_LOCATION = "myapp/"
-        REGISTRY_CREDENTIALS = credentials('docker-cred')
+        SONAR_TOKEN = credentials('sonarqube-token')
       }
+      steps {
+        script {
+          sh '''
+            sonar-scanner \
+              -Dsonar.projectKey=myfirstproject \
+              -Dsonar.sources=. \
+              -Dsonar.host.url=${SONARQUBE_URL} \
+              -Dsonar.login=${SONAR_TOKEN}
+          '''
+        }
+      }
+    }
+
+    stage('Build and Push Docker Image') {
       steps {
         script {
             sh 'cd myapp/ && docker build -t ${DOCKER_IMAGE} .'
@@ -29,24 +51,21 @@ pipeline {
         }
       }
     }
+
     stage('Update Deployment File') {
-        environment {
-            GIT_REPO_NAME = "myfirstproject"
-            GIT_USER_NAME = "mohitpr321"
+      steps {
+        withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+          sh '''
+            git config user.email "mohitpr321@gmail.com"
+            git config user.name "Mohit Sharma"
+            BUILD_NUMBER=${BUILD_NUMBER}
+            sed -i "s/\\(:[0-9]\\+\\)/:$BUILD_NUMBER/" mydeploy/deployment.yaml
+            git add mydeploy/deployment.yaml
+            git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+          '''
         }
-        steps {
-            withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                sh '''
-                    git config user.email "mohitpr321@gmail.com"
-                    git config user.name "Mohit Sharma"
-                    BUILD_NUMBER=${BUILD_NUMBER}
-                    sed -i "s/\\(:[0-9]\\+\\)/:$BUILD_NUMBER/" mydeploy/deployment.yaml
-                    git add mydeploy/deployment.yaml
-                    git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                    git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
-                '''
-            }
-        }
+      }
     }
   }
 }
